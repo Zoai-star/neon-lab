@@ -58,10 +58,30 @@ const traits: Trait[] = [
 
 type Genotype = "hom-dom" | "het" | "hom-rec";
 
-const genotypeOptions: { value: Genotype; short: (t: Trait) => string }[] = [
-  { value: "hom-dom", short: (t) => `${t.dominant.allele}${t.dominant.allele}` },
-  { value: "het", short: (t) => `${t.dominant.allele}${t.recessive.allele}` },
-  { value: "hom-rec", short: (t) => `${t.recessive.allele}${t.recessive.allele}` },
+const genotypeOptions: {
+  value: Genotype;
+  plain: (t: Trait) => string;
+  hint: (t: Trait) => string;
+  code: (t: Trait) => string;
+}[] = [
+  {
+    value: "hom-dom",
+    plain: (t) => t.dominant.label,
+    hint: () => "pure — both genes the same",
+    code: (t) => `${t.dominant.allele}${t.dominant.allele}`,
+  },
+  {
+    value: "het",
+    plain: (t) => `${t.dominant.label}, carries ${t.recessive.label.toLowerCase()}`,
+    hint: () => "mixed — one of each gene",
+    code: (t) => `${t.dominant.allele}${t.recessive.allele}`,
+  },
+  {
+    value: "hom-rec",
+    plain: (t) => t.recessive.label,
+    hint: () => "pure — both genes the same",
+    code: (t) => `${t.recessive.allele}${t.recessive.allele}`,
+  },
 ];
 
 function alleles(t: Trait, g: Genotype): [string, string] {
@@ -127,7 +147,11 @@ function DnaLab() {
       const pair = [fromA, fromB].sort().join("");
       const hasDominant = pair.includes(t.dominant.allele);
       const zygosity =
-        fromA === fromB ? (hasDominant ? "Homozygous dominant" : "Homozygous recessive") : "Heterozygous";
+        fromA === fromB
+          ? hasDominant
+            ? "Two strong genes (homozygous dominant)"
+            : "Two hidden genes (homozygous recessive)"
+          : "One of each (heterozygous)";
       return {
         trait: t.label,
         pair,
@@ -158,13 +182,16 @@ function DnaLab() {
                 <button
                   key={g.value}
                   onClick={() => set({ ...state, [t.key]: g.value })}
-                  className={`rounded-md border px-3 py-1.5 font-display text-sm transition-colors ${
+                  className={`flex-1 min-w-[9rem] rounded-md border px-3 py-2 text-left text-sm transition-colors ${
                     state[t.key] === g.value
                       ? "border-primary bg-primary/15 text-primary"
                       : "border-border text-muted-foreground hover:border-primary"
                   }`}
                 >
-                  {g.short(t)}
+                  <span className="block text-foreground">{g.plain(t)}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {g.hint(t)} · genes {g.code(t)}
+                  </span>
                 </button>
               ))}
             </div>
@@ -178,7 +205,7 @@ function DnaLab() {
     <LabShell
       eyebrow="Station 02"
       title="DNA SPLICER"
-      intro="Set the allele pairs of Parent A and Parent B, then splice. Each parent passes one random allele per trait — capital letters are dominant."
+      intro="Pick what each parent looks like — eye glow, skin, wings and size — then splice. Each parent passes on one gene per trait, and a strong (dominant) gene always shows over a hidden (recessive) one."
     >
       <div className="grid gap-5 md:grid-cols-2">
         {parentPanel("Parent A", a, setA, "text-neon-cyan")}
@@ -207,9 +234,10 @@ function DnaLab() {
                 <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
                   {c.trait}
                 </p>
-                <p className="mt-1 font-display text-xl text-primary">{c.pair}</p>
-                <p className="text-sm text-foreground">{c.phenotype}</p>
-                <p className="text-xs text-muted-foreground">{c.zygosity}</p>
+                <p className="mt-1 font-display text-lg text-primary">{c.phenotype}</p>
+                <p className="text-xs text-muted-foreground">
+                  {c.zygosity} · genes {c.pair}
+                </p>
               </div>
             ))}
           </div>

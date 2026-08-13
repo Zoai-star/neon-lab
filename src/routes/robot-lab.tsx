@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
+import { RobotPreview } from "@/components/RobotPreview";
 
 export const Route = createFileRoute("/robot-lab")({
   head: () => ({
@@ -204,6 +205,15 @@ function RobotLab() {
 
         <section className="panel neon-glow p-5">
           <h2 className="text-lg text-neon-lime neon-text">Build readout</h2>
+          <div className="mt-3 rounded-xl border border-border bg-secondary/30 p-2">
+            <RobotPreview
+              head={choice.head}
+              chassis={choice.chassis}
+              limbs={choice.limbs}
+              core={choice.core}
+              name={name}
+            />
+          </div>
           <p className="mt-3 font-display text-2xl text-foreground">{name || "UNNAMED"}</p>
           <ul className="mt-2 grid gap-1 text-sm text-muted-foreground">
             {partOrder.map((key) => (

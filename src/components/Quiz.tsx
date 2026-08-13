@@ -14,6 +14,7 @@ export function Quiz({ title, questions }: { title: string; questions: QuizQuest
   const [done, setDone] = useState(false);
 
   const q = questions[index];
+  if (!q) return null;
 
   function choose(i: number) {
     if (picked !== null) return;

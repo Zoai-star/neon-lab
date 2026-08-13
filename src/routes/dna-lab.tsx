@@ -147,7 +147,11 @@ function DnaLab() {
       const pair = [fromA, fromB].sort().join("");
       const hasDominant = pair.includes(t.dominant.allele);
       const zygosity =
-        fromA === fromB ? (hasDominant ? "Homozygous dominant" : "Homozygous recessive") : "Heterozygous";
+        fromA === fromB
+          ? hasDominant
+            ? "Two strong genes (homozygous dominant)"
+            : "Two hidden genes (homozygous recessive)"
+          : "One of each (heterozygous)";
       return {
         trait: t.label,
         pair,

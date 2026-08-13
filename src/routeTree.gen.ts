@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChemLabRouteImport } from './routes/chem-lab'
+import { Route as DnaLabRouteImport } from './routes/dna-lab'
+import { Route as RobotLabRouteImport } from './routes/robot-lab'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChemLabRoute = ChemLabRouteImport.update({
+  id: '/chem-lab',
+  path: '/chem-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DnaLabRoute = DnaLabRouteImport.update({
+  id: '/dna-lab',
+  path: '/dna-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotLabRoute = RobotLabRouteImport.update({
+  id: '/robot-lab',
+  path: '/robot-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chem-lab': typeof ChemLabRoute
+  '/dna-lab': typeof DnaLabRoute
+  '/robot-lab': typeof RobotLabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chem-lab': typeof ChemLabRoute
+  '/dna-lab': typeof DnaLabRoute
+  '/robot-lab': typeof RobotLabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chem-lab': typeof ChemLabRoute
+  '/dna-lab': typeof DnaLabRoute
+  '/robot-lab': typeof RobotLabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/chem-lab' | '/dna-lab' | '/robot-lab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/chem-lab' | '/dna-lab' | '/robot-lab'
+  id: '__root__' | '/' | '/chem-lab' | '/dna-lab' | '/robot-lab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChemLabRoute: typeof ChemLabRoute
+  DnaLabRoute: typeof DnaLabRoute
+  RobotLabRoute: typeof RobotLabRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chem-lab': {
+      id: '/chem-lab'
+      path: '/chem-lab'
+      fullPath: '/chem-lab'
+      preLoaderRoute: typeof ChemLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dna-lab': {
+      id: '/dna-lab'
+      path: '/dna-lab'
+      fullPath: '/dna-lab'
+      preLoaderRoute: typeof DnaLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robot-lab': {
+      id: '/robot-lab'
+      path: '/robot-lab'
+      fullPath: '/robot-lab'
+      preLoaderRoute: typeof RobotLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChemLabRoute: ChemLabRoute,
+  DnaLabRoute: DnaLabRoute,
+  RobotLabRoute: RobotLabRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

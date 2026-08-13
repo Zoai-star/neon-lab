@@ -13,8 +13,7 @@ export function Quiz({ title, questions }: { title: string; questions: QuizQuest
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
 
-  const q = questions[index];
-  if (!q) return null;
+  const q = questions[index]!;
 
   function choose(i: number) {
     if (picked !== null) return;

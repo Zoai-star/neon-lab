@@ -58,10 +58,30 @@ const traits: Trait[] = [
 
 type Genotype = "hom-dom" | "het" | "hom-rec";
 
-const genotypeOptions: { value: Genotype; short: (t: Trait) => string }[] = [
-  { value: "hom-dom", short: (t) => `${t.dominant.allele}${t.dominant.allele}` },
-  { value: "het", short: (t) => `${t.dominant.allele}${t.recessive.allele}` },
-  { value: "hom-rec", short: (t) => `${t.recessive.allele}${t.recessive.allele}` },
+const genotypeOptions: {
+  value: Genotype;
+  plain: (t: Trait) => string;
+  hint: (t: Trait) => string;
+  code: (t: Trait) => string;
+}[] = [
+  {
+    value: "hom-dom",
+    plain: (t) => t.dominant.label,
+    hint: () => "pure — both genes the same",
+    code: (t) => `${t.dominant.allele}${t.dominant.allele}`,
+  },
+  {
+    value: "het",
+    plain: (t) => `${t.dominant.label}, carries ${t.recessive.label.toLowerCase()}`,
+    hint: () => "mixed — one of each gene",
+    code: (t) => `${t.dominant.allele}${t.recessive.allele}`,
+  },
+  {
+    value: "hom-rec",
+    plain: (t) => t.recessive.label,
+    hint: () => "pure — both genes the same",
+    code: (t) => `${t.recessive.allele}${t.recessive.allele}`,
+  },
 ];
 
 function alleles(t: Trait, g: Genotype): [string, string] {

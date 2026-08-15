@@ -162,6 +162,12 @@ function RobotLab() {
 
   const statLabels = ["Speed", "Strength", "Smarts"];
 
+  function deploy() {
+    const unitName = name.trim() || "UNNAMED";
+    setSaved((s) => [...s, { name: unitName, choice: { ...choice }, totals }]);
+    setWalker({ name: unitName, choice: { ...choice }, key: Date.now() });
+  }
+
   return (
     <LabShell
       eyebrow="Station 01"

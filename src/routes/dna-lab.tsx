@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
+import { CreaturePreview } from "@/components/CreaturePreview";
 
 export const Route = createFileRoute("/dna-lab")({
   head: () => ({
@@ -121,6 +122,10 @@ const dnaQuiz: QuizQuestion[] = [
   },
 ];
 
+type Pheno = { eyes: boolean; scales: boolean; wings: boolean; size: boolean };
+type ChildRow = { trait: string; pair: string; phenotype: string; zygosity: string };
+type Specimen = { name: string; rows: ChildRow[]; pheno: Pheno };
+
 function DnaLab() {
   const [a, setA] = useState<Record<string, Genotype>>({
     eyes: "het",
@@ -134,18 +139,27 @@ function DnaLab() {
     wings: "hom-rec",
     size: "het",
   });
-  const [child, setChild] = useState<
-    { trait: string; pair: string; phenotype: string; zygosity: string }[] | null
-  >(null);
+  const [child, setChild] = useState<ChildRow[] | null>(null);
+  const [pheno, setPheno] = useState<Pheno>({
+    eyes: true,
+    scales: true,
+    wings: false,
+    size: false,
+  });
+  const [name, setName] = useState("SPECIMEN-01");
+  const [saved, setSaved] = useState<Specimen[]>([]);
+  const [crawler, setCrawler] = useState<{ specimen: Specimen; key: number } | null>(null);
   const [splicing, setSplicing] = useState(false);
 
   function splice() {
     setSplicing(true);
+    const shown: Pheno = { eyes: false, scales: false, wings: false, size: false };
     const result = traits.map((t) => {
       const fromA = alleles(t, a[t.key] ?? "het")[Math.random() < 0.5 ? 0 : 1]!;
       const fromB = alleles(t, b[t.key] ?? "het")[Math.random() < 0.5 ? 0 : 1]!;
       const pair = [fromA, fromB].sort().join("");
       const hasDominant = pair.includes(t.dominant.allele);
+      shown[t.key as keyof Pheno] = hasDominant;
       const zygosity =
         fromA === fromB
           ? hasDominant
@@ -161,9 +175,18 @@ function DnaLab() {
     });
     window.setTimeout(() => {
       setChild(result);
+      setPheno(shown);
       setSplicing(false);
     }, 700);
   }
+
+  function saveSpecimen() {
+    if (!child) return;
+    const specimen: Specimen = { name: name.trim() || "UNNAMED", rows: child, pheno };
+    setSaved((s) => [...s, specimen]);
+    setCrawler({ specimen, key: Date.now() });
+  }
+
 
   function parentPanel(
     title: string,
@@ -228,21 +251,112 @@ function DnaLab() {
             No sequence yet. Run the splicer to generate an organism.
           </p>
         ) : (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {child.map((c) => (
-              <div key={c.trait} className="rounded-md border border-border bg-secondary/40 p-3">
-                <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                  {c.trait}
-                </p>
-                <p className="mt-1 font-display text-lg text-primary">{c.phenotype}</p>
-                <p className="text-xs text-muted-foreground">
-                  {c.zygosity} · genes {c.pair}
-                </p>
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="mt-3 rounded-xl border border-border bg-secondary/30 p-2">
+              <CreaturePreview
+                eyes={pheno.eyes}
+                scales={pheno.scales}
+                wings={pheno.wings}
+                size={pheno.size}
+                name={name}
+              />
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {child.map((c) => (
+                <div key={c.trait} className="rounded-md border border-border bg-secondary/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                    {c.trait}
+                  </p>
+                  <p className="mt-1 font-display text-lg text-primary">{c.phenotype}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.zygosity} · genes {c.pair}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <label className="mt-5 block text-xs uppercase tracking-[0.25em] text-muted-foreground">
+              Specimen name
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 w-full rounded-md border border-input bg-secondary/40 px-3 py-2 font-display text-sm text-foreground outline-none focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={saveSpecimen}
+              className="mt-3 w-full rounded-md bg-primary px-4 py-2.5 font-display text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Name &amp; release specimen
+            </button>
+          </>
         )}
       </section>
+
+      {crawler && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-56 overflow-hidden">
+          <div
+            key={crawler.key}
+            className="crawl-across absolute bottom-2 left-0 w-40"
+            onAnimationEnd={() => setCrawler(null)}
+          >
+            <div className="creature-scuttle">
+              <CreaturePreview
+                eyes={crawler.specimen.pheno.eyes}
+                scales={crawler.specimen.pheno.scales}
+                wings={crawler.specimen.pheno.wings}
+                size={crawler.specimen.pheno.size}
+                name={crawler.specimen.name}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {saved.length > 0 && (
+        <section className="panel p-5">
+          <h2 className="text-lg text-neon-amber neon-text">
+            Specimen vault · {saved.length} saved
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {saved.map((s, i) => (
+              <article
+                key={`${s.name}-${i}`}
+                className="rounded-xl border border-border bg-secondary/30 p-3"
+              >
+                <CreaturePreview
+                  eyes={s.pheno.eyes}
+                  scales={s.pheno.scales}
+                  wings={s.pheno.wings}
+                  size={s.pheno.size}
+                  name={s.name}
+                />
+                <p className="mt-2 font-display text-sm text-foreground">{s.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {s.rows.map((r) => r.phenotype).join(" · ")}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCrawler({ specimen: s, key: Date.now() })}
+                    className="rounded-md border border-border px-2.5 py-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                  >
+                    Crawl
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaved((list) => list.filter((_, j) => j !== i))}
+                    className="rounded-md border border-border px-2.5 py-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+                  >
+                    Release
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
 
       <Quiz title="Genetics clearance quiz" questions={dnaQuiz} />
     </LabShell>

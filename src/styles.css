@@ -170,3 +170,30 @@
 @utility bubble {
   animation: bubble-rise 2.4s linear infinite;
 }
+
+@keyframes walk-across {
+  0% {
+    transform: translateX(-20vw);
+  }
+  100% {
+    transform: translateX(105vw);
+  }
+}
+
+@utility walk-across {
+  animation: walk-across 5s linear forwards;
+}
+
+@keyframes robot-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+@utility robot-bob {
+  animation: robot-bob 0.5s ease-in-out infinite;
+}

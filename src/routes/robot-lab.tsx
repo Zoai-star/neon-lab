@@ -132,6 +132,12 @@ function RobotLab() {
     core: 0,
   });
   const [name, setName] = useState("UNIT-01");
+  const [saved, setSaved] = useState<
+    { name: string; choice: Record<PartKey, number>; totals: [number, number, number] }[]
+  >([]);
+  const [walker, setWalker] = useState<
+    { name: string; choice: Record<PartKey, number>; key: number } | null
+  >(null);
   const [question, setQuestion] = useState("");
   const [log, setLog] = useState<{ role: "you" | "ada"; text: string }[]>([
     {
@@ -161,6 +167,12 @@ function RobotLab() {
   }
 
   const statLabels = ["Speed", "Strength", "Smarts"];
+
+  function deploy() {
+    const unitName = name.trim() || "UNNAMED";
+    setSaved((s) => [...s, { name: unitName, choice: { ...choice }, totals }]);
+    setWalker({ name: unitName, choice: { ...choice }, key: Date.now() });
+  }
 
   return (
     <LabShell
@@ -238,8 +250,85 @@ function RobotLab() {
               </div>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={deploy}
+            className="mt-5 w-full rounded-md bg-primary px-4 py-2.5 font-display text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Submit &amp; deploy unit
+          </button>
         </section>
       </div>
+
+      {walker && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-56 overflow-hidden">
+          <div
+            key={walker.key}
+            className="walk-across absolute bottom-2 left-0 w-40"
+            onAnimationEnd={() => setWalker(null)}
+          >
+            <div className="robot-bob">
+              <RobotPreview
+                head={walker.choice.head}
+                chassis={walker.choice.chassis}
+                limbs={walker.choice.limbs}
+                core={walker.choice.core}
+                name={walker.name}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {saved.length > 0 && (
+        <section className="panel p-5">
+          <h2 className="text-lg text-neon-amber neon-text">Robot bay · {saved.length} saved</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {saved.map((r, i) => (
+              <article key={`${r.name}-${i}`} className="rounded-xl border border-border bg-secondary/30 p-3">
+                <RobotPreview
+                  head={r.choice.head}
+                  chassis={r.choice.chassis}
+                  limbs={r.choice.limbs}
+                  core={r.choice.core}
+                  name={r.name}
+                />
+                <p className="mt-2 font-display text-sm text-foreground">{r.name}</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {statLabels.map((s, j) => `${s} ${r.totals[j]}`).join(" · ")}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setName(r.name);
+                      setChoice(r.choice);
+                    }}
+                    className="rounded-md border border-border px-2.5 py-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    Load
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWalker({ name: r.name, choice: r.choice, key: Date.now() })}
+                    className="rounded-md border border-border px-2.5 py-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                  >
+                    Walk
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaved((s) => s.filter((_, j) => j !== i))}
+                    className="rounded-md border border-border px-2.5 py-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+                  >
+                    Scrap
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
 
       <section className="panel p-5">
         <h2 className="text-lg text-accent neon-text">ADA · AI lab assistant</h2>

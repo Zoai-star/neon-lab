@@ -132,6 +132,12 @@ function RobotLab() {
     core: 0,
   });
   const [name, setName] = useState("UNIT-01");
+  const [saved, setSaved] = useState<
+    { name: string; choice: Record<PartKey, number>; totals: [number, number, number] }[]
+  >([]);
+  const [walker, setWalker] = useState<
+    { name: string; choice: Record<PartKey, number>; key: number } | null
+  >(null);
   const [question, setQuestion] = useState("");
   const [log, setLog] = useState<{ role: "you" | "ada"; text: string }[]>([
     {

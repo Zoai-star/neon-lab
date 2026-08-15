@@ -121,6 +121,10 @@ const dnaQuiz: QuizQuestion[] = [
   },
 ];
 
+type Pheno = { eyes: boolean; scales: boolean; wings: boolean; size: boolean };
+type ChildRow = { trait: string; pair: string; phenotype: string; zygosity: string };
+type Specimen = { name: string; rows: ChildRow[]; pheno: Pheno };
+
 function DnaLab() {
   const [a, setA] = useState<Record<string, Genotype>>({
     eyes: "het",
@@ -134,18 +138,27 @@ function DnaLab() {
     wings: "hom-rec",
     size: "het",
   });
-  const [child, setChild] = useState<
-    { trait: string; pair: string; phenotype: string; zygosity: string }[] | null
-  >(null);
+  const [child, setChild] = useState<ChildRow[] | null>(null);
+  const [pheno, setPheno] = useState<Pheno>({
+    eyes: true,
+    scales: true,
+    wings: false,
+    size: false,
+  });
+  const [name, setName] = useState("SPECIMEN-01");
+  const [saved, setSaved] = useState<Specimen[]>([]);
+  const [crawler, setCrawler] = useState<{ specimen: Specimen; key: number } | null>(null);
   const [splicing, setSplicing] = useState(false);
 
   function splice() {
     setSplicing(true);
+    const shown: Pheno = { eyes: false, scales: false, wings: false, size: false };
     const result = traits.map((t) => {
       const fromA = alleles(t, a[t.key] ?? "het")[Math.random() < 0.5 ? 0 : 1]!;
       const fromB = alleles(t, b[t.key] ?? "het")[Math.random() < 0.5 ? 0 : 1]!;
       const pair = [fromA, fromB].sort().join("");
       const hasDominant = pair.includes(t.dominant.allele);
+      shown[t.key as keyof Pheno] = hasDominant;
       const zygosity =
         fromA === fromB
           ? hasDominant
@@ -161,9 +174,18 @@ function DnaLab() {
     });
     window.setTimeout(() => {
       setChild(result);
+      setPheno(shown);
       setSplicing(false);
     }, 700);
   }
+
+  function saveSpecimen() {
+    if (!child) return;
+    const specimen: Specimen = { name: name.trim() || "UNNAMED", rows: child, pheno };
+    setSaved((s) => [...s, specimen]);
+    setCrawler({ specimen, key: Date.now() });
+  }
+
 
   function parentPanel(
     title: string,

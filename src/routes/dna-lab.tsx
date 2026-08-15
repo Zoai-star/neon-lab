@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
+import { CreaturePreview } from "@/components/CreaturePreview";
 
 export const Route = createFileRoute("/dna-lab")({
   head: () => ({

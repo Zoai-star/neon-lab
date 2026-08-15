@@ -197,3 +197,30 @@
 @utility robot-bob {
   animation: robot-bob 0.5s ease-in-out infinite;
 }
+
+@keyframes crawl-across {
+  0% {
+    transform: translateX(105vw) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-25vw) scaleX(-1);
+  }
+}
+
+@utility crawl-across {
+  animation: crawl-across 6s linear forwards;
+}
+
+@keyframes creature-scuttle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(2deg);
+  }
+}
+
+@utility creature-scuttle {
+  animation: creature-scuttle 0.35s ease-in-out infinite;
+}

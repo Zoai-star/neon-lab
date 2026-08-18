@@ -3,6 +3,8 @@ import { useState } from "react";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
 import { RobotPreview } from "@/components/RobotPreview";
+import { useServerFn } from "@tanstack/react-start";
+import { askAda } from "@/lib/ada.functions";
 
 export const Route = createFileRoute("/robot-lab")({
   head: () => ({
@@ -56,43 +58,6 @@ const partLabels: Record<PartKey, string> = {
   core: "Power core",
 };
 
-const facts: { keys: string[]; fact: string }[] = [
-  {
-    keys: ["sensor", "see", "eye", "optic", "camera"],
-    fact: "Robots 'see' with sensors: cameras, LIDAR that times laser bounces, and infrared for heat. No single sensor is trusted alone — data from several is fused together.",
-  },
-  {
-    keys: ["motor", "servo", "move", "actuator", "leg", "walk"],
-    fact: "Actuators are a robot's muscles. Servo motors report their own angle back to the controller, which is how a robot arm knows exactly where its hand is.",
-  },
-  {
-    keys: ["battery", "power", "energy", "core", "solar"],
-    fact: "Most mobile robots run on lithium-ion packs. Power is the top design limit: heavier batteries give longer life but cost you speed and agility.",
-  },
-  {
-    keys: ["ai", "brain", "learn", "neural", "think"],
-    fact: "A robot's 'brain' loops three steps forever: sense, plan, act. Machine learning helps with the planning step by predicting outcomes from past data.",
-  },
-  {
-    keys: ["law", "asimov", "safe", "safety"],
-    fact: "Isaac Asimov's Three Laws of Robotics are fiction, but real robots use hard safety stops, force limits and fenced work cells instead.",
-  },
-  {
-    keys: ["space", "mars", "rover"],
-    fact: "Mars rovers drive semi-autonomously because a radio command takes 5-20 minutes to arrive. They must plan their own path around rocks.",
-  },
-  {
-    keys: ["history", "first", "origin", "word"],
-    fact: "The word 'robot' comes from the 1920 Czech play R.U.R., from 'robota', meaning forced labour. The first industrial robot, Unimate, started work in 1961.",
-  },
-];
-
-const fallbackFacts = [
-  "Fun fact: swarm robots follow simple local rules, yet together they behave like one organism.",
-  "Fun fact: soft robots made of silicone can squeeze through gaps narrower than their own bodies.",
-  "Fun fact: a robot vacuum maps your room with an internal grid and remembers where it got stuck.",
-];
-
 const robotQuiz: QuizQuestion[] = [
   {
     question: "What is an actuator on a robot?",
@@ -142,9 +107,11 @@ function RobotLab() {
   const [log, setLog] = useState<{ role: "you" | "ada"; text: string }[]>([
     {
       role: "ada",
-      text: "ADA online. I'm your lab assistant. Ask me about sensors, motors, power, AI, safety or space robots.",
+      text: "ADA online. I'm your lab assistant — ask me anything about robots, science or your build and I'll answer properly.",
     },
   ]);
+  const [thinking, setThinking] = useState(false);
+  const askAdaFn = useServerFn(askAda);
 
   const totals = partOrder.reduce(
     (acc, key) => {
@@ -154,17 +121,33 @@ function RobotLab() {
     [0, 0, 0] as [number, number, number],
   );
 
-  function ask(e: React.FormEvent) {
+  async function ask(e: React.FormEvent) {
     e.preventDefault();
     const text = question.trim();
-    if (!text) return;
-    const lower = text.toLowerCase();
-    const hit = facts.find((f) => f.keys.some((k) => lower.includes(k)));
-    const answer =
-      hit?.fact ?? fallbackFacts[Math.floor(Math.random() * fallbackFacts.length)]!;
-    setLog((l) => [...l, { role: "you", text }, { role: "ada", text: answer }]);
+    if (!text || thinking) return;
+    const history = log
+      .slice(1)
+      .map((m) => ({ role: m.role === "ada" ? ("assistant" as const) : ("user" as const), content: m.text }))
+      .slice(-10);
+    setLog((l) => [...l, { role: "you", text }]);
     setQuestion("");
+    setThinking(true);
+    try {
+      const res = await askAdaFn({ data: { question: text, history } });
+      setLog((l) => [...l, { role: "ada", text: res.answer }]);
+    } catch (err) {
+      setLog((l) => [
+        ...l,
+        {
+          role: "ada",
+          text: err instanceof Error ? err.message : "ADA hit a transmission error. Try again.",
+        },
+      ]);
+    } finally {
+      setThinking(false);
+    }
   }
+
 
   const statLabels = ["Speed", "Strength", "Smarts"];
 
@@ -348,19 +331,26 @@ function RobotLab() {
               {m.text}
             </p>
           ))}
+          {thinking && (
+            <p className="rounded-md bg-secondary/50 px-3 py-2 text-sm text-muted-foreground">
+              <span className="mr-2 text-xs uppercase tracking-widest">ada</span>
+              thinking…
+            </p>
+          )}
         </div>
         <form onSubmit={ask} className="mt-4 flex gap-2">
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="How do robots see?"
+            placeholder="Ask ADA anything..."
             className="min-w-0 flex-1 rounded-md border border-input bg-secondary/40 px-3 py-2 text-sm outline-none focus:border-accent"
           />
           <button
             type="submit"
-            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold uppercase tracking-widest text-accent-foreground"
+            disabled={thinking}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold uppercase tracking-widest text-accent-foreground disabled:opacity-50"
           >
-            Ask
+            {thinking ? "..." : "Ask"}
           </button>
         </form>
       </section>

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
 import { RobotPreview } from "@/components/RobotPreview";
@@ -90,16 +91,16 @@ const robotQuiz: QuizQuestion[] = [
 ];
 
 function RobotLab() {
-  const [choice, setChoice] = useState<Record<PartKey, number>>({
+  const [choice, setChoice] = usePersistentState<Record<PartKey, number>>("lab.robot.choice", {
     head: 0,
     chassis: 0,
     limbs: 0,
     core: 0,
   });
-  const [name, setName] = useState("UNIT-01");
-  const [saved, setSaved] = useState<
+  const [name, setName] = usePersistentState("lab.robot.name", "UNIT-01");
+  const [saved, setSaved] = usePersistentState<
     { name: string; choice: Record<PartKey, number>; totals: [number, number, number] }[]
-  >([]);
+  >("lab.robot.saved", []);
   const [walker, setWalker] = useState<
     { name: string; choice: Record<PartKey, number>; key: number } | null
   >(null);

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
 
@@ -71,10 +72,13 @@ const chemQuiz: QuizQuestion[] = [
 ];
 
 function ChemLab() {
-  const [inventory, setInventory] = useState<string[]>(startingSubstances);
+  const [inventory, setInventory] = usePersistentState<string[]>(
+    "lab.chem.inventory",
+    startingSubstances,
+  );
   const [selected, setSelected] = useState<string[]>([]);
   const [message, setMessage] = useState("Select two substances, then mix.");
-  const [discovered, setDiscovered] = useState<string[]>([]);
+  const [discovered, setDiscovered] = usePersistentState<string[]>("lab.chem.discovered", []);
 
   function toggle(item: string) {
     setSelected((s) =>

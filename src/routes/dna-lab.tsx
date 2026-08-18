@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { LabShell } from "@/components/LabShell";
 import { Quiz, type QuizQuestion } from "@/components/Quiz";
-import { CreaturePreview } from "@/components/CreaturePreview";
+import { PersonPreview } from "@/components/PersonPreview";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 
 export const Route = createFileRoute("/dna-lab")({
   head: () => ({
@@ -33,27 +34,27 @@ type Trait = {
 const traits: Trait[] = [
   {
     key: "eyes",
-    label: "Eye glow",
-    dominant: { allele: "E", label: "Cyan glow" },
-    recessive: { allele: "e", label: "Dim amber" },
+    label: "Eye colour",
+    dominant: { allele: "B", label: "Brown eyes" },
+    recessive: { allele: "b", label: "Blue eyes" },
   },
   {
-    key: "scales",
-    label: "Skin type",
-    dominant: { allele: "S", label: "Scaled" },
-    recessive: { allele: "s", label: "Smooth" },
+    key: "hair",
+    label: "Hair type",
+    dominant: { allele: "C", label: "Curly hair" },
+    recessive: { allele: "c", label: "Straight hair" },
   },
   {
-    key: "wings",
-    label: "Wings",
-    dominant: { allele: "W", label: "Winged" },
-    recessive: { allele: "w", label: "Wingless" },
+    key: "freckles",
+    label: "Freckles",
+    dominant: { allele: "F", label: "Freckles" },
+    recessive: { allele: "f", label: "No freckles" },
   },
   {
-    key: "size",
-    label: "Size",
-    dominant: { allele: "T", label: "Towering" },
-    recessive: { allele: "t", label: "Tiny" },
+    key: "tall",
+    label: "Height",
+    dominant: { allele: "T", label: "Tall" },
+    recessive: { allele: "t", label: "Short" },
   },
 ];
 
@@ -122,38 +123,38 @@ const dnaQuiz: QuizQuestion[] = [
   },
 ];
 
-type Pheno = { eyes: boolean; scales: boolean; wings: boolean; size: boolean };
+type Pheno = { eyes: boolean; hair: boolean; freckles: boolean; tall: boolean };
 type ChildRow = { trait: string; pair: string; phenotype: string; zygosity: string };
 type Specimen = { name: string; rows: ChildRow[]; pheno: Pheno };
 
 function DnaLab() {
-  const [a, setA] = useState<Record<string, Genotype>>({
+  const [a, setA] = usePersistentState<Record<string, Genotype>>("lab.dna.parentA", {
     eyes: "het",
-    scales: "hom-dom",
-    wings: "het",
-    size: "hom-rec",
+    hair: "hom-dom",
+    freckles: "het",
+    tall: "hom-rec",
   });
-  const [b, setB] = useState<Record<string, Genotype>>({
+  const [b, setB] = usePersistentState<Record<string, Genotype>>("lab.dna.parentB", {
     eyes: "hom-rec",
-    scales: "het",
-    wings: "hom-rec",
-    size: "het",
+    hair: "het",
+    freckles: "hom-rec",
+    tall: "het",
   });
-  const [child, setChild] = useState<ChildRow[] | null>(null);
-  const [pheno, setPheno] = useState<Pheno>({
+  const [child, setChild] = usePersistentState<ChildRow[] | null>("lab.dna.child", null);
+  const [pheno, setPheno] = usePersistentState<Pheno>("lab.dna.pheno", {
     eyes: true,
-    scales: true,
-    wings: false,
-    size: false,
+    hair: true,
+    freckles: false,
+    tall: false,
   });
-  const [name, setName] = useState("SPECIMEN-01");
-  const [saved, setSaved] = useState<Specimen[]>([]);
+  const [name, setName] = usePersistentState("lab.dna.name", "PERSON-01");
+  const [saved, setSaved] = usePersistentState<Specimen[]>("lab.dna.saved", []);
   const [crawler, setCrawler] = useState<{ specimen: Specimen; key: number } | null>(null);
   const [splicing, setSplicing] = useState(false);
 
   function splice() {
     setSplicing(true);
-    const shown: Pheno = { eyes: false, scales: false, wings: false, size: false };
+    const shown: Pheno = { eyes: false, hair: false, freckles: false, tall: false };
     const result = traits.map((t) => {
       const fromA = alleles(t, a[t.key] ?? "het")[Math.random() < 0.5 ? 0 : 1]!;
       const fromB = alleles(t, b[t.key] ?? "het")[Math.random() < 0.5 ? 0 : 1]!;
@@ -228,7 +229,7 @@ function DnaLab() {
     <LabShell
       eyebrow="Station 02"
       title="DNA SPLICER"
-      intro="Pick what each parent looks like — eye glow, skin, wings and size — then splice. Each parent passes on one gene per trait, and a strong (dominant) gene always shows over a hidden (recessive) one."
+      intro="Pick what each parent looks like — eye colour, hair, freckles and height — then splice. Each parent passes on one gene per trait, and a strong (dominant) gene always shows over a hidden (recessive) one."
     >
       <div className="grid gap-5 md:grid-cols-2">
         {parentPanel("Parent A", a, setA, "text-neon-cyan")}
@@ -248,16 +249,16 @@ function DnaLab() {
         <h2 className="text-lg text-neon-lime neon-text">Offspring readout</h2>
         {!child ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            No sequence yet. Run the splicer to generate an organism.
+            No sequence yet. Run the splicer to generate a child.
           </p>
         ) : (
           <>
             <div className="mt-3 rounded-xl border border-border bg-secondary/30 p-2">
-              <CreaturePreview
+              <PersonPreview
                 eyes={pheno.eyes}
-                scales={pheno.scales}
-                wings={pheno.wings}
-                size={pheno.size}
+                hair={pheno.hair}
+                freckles={pheno.freckles}
+                tall={pheno.tall}
                 name={name}
               />
             </div>
@@ -275,7 +276,7 @@ function DnaLab() {
               ))}
             </div>
             <label className="mt-5 block text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              Specimen name
+              Person name
             </label>
             <input
               value={name}
@@ -287,7 +288,7 @@ function DnaLab() {
               onClick={saveSpecimen}
               className="mt-3 w-full rounded-md bg-primary px-4 py-2.5 font-display text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Name &amp; release specimen
+              Name &amp; save person
             </button>
           </>
         )}
@@ -301,11 +302,11 @@ function DnaLab() {
             onAnimationEnd={() => setCrawler(null)}
           >
             <div className="creature-scuttle">
-              <CreaturePreview
+              <PersonPreview
                 eyes={crawler.specimen.pheno.eyes}
-                scales={crawler.specimen.pheno.scales}
-                wings={crawler.specimen.pheno.wings}
-                size={crawler.specimen.pheno.size}
+                hair={crawler.specimen.pheno.hair}
+                freckles={crawler.specimen.pheno.freckles}
+                tall={crawler.specimen.pheno.tall}
                 name={crawler.specimen.name}
               />
             </div>
@@ -316,7 +317,7 @@ function DnaLab() {
       {saved.length > 0 && (
         <section className="panel p-5">
           <h2 className="text-lg text-neon-amber neon-text">
-            Specimen vault · {saved.length} saved
+            People vault · {saved.length} saved
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {saved.map((s, i) => (
@@ -324,11 +325,11 @@ function DnaLab() {
                 key={`${s.name}-${i}`}
                 className="rounded-xl border border-border bg-secondary/30 p-3"
               >
-                <CreaturePreview
+                <PersonPreview
                   eyes={s.pheno.eyes}
-                  scales={s.pheno.scales}
-                  wings={s.pheno.wings}
-                  size={s.pheno.size}
+                  hair={s.pheno.hair}
+                  freckles={s.pheno.freckles}
+                  tall={s.pheno.tall}
                   name={s.name}
                 />
                 <p className="mt-2 font-display text-sm text-foreground">{s.name}</p>

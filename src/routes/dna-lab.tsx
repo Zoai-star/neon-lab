@@ -33,27 +33,27 @@ type Trait = {
 const traits: Trait[] = [
   {
     key: "eyes",
-    label: "Eye glow",
-    dominant: { allele: "E", label: "Cyan glow" },
-    recessive: { allele: "e", label: "Dim amber" },
+    label: "Eye colour",
+    dominant: { allele: "B", label: "Brown eyes" },
+    recessive: { allele: "b", label: "Blue eyes" },
   },
   {
-    key: "scales",
-    label: "Skin type",
-    dominant: { allele: "S", label: "Scaled" },
-    recessive: { allele: "s", label: "Smooth" },
+    key: "hair",
+    label: "Hair type",
+    dominant: { allele: "C", label: "Curly hair" },
+    recessive: { allele: "c", label: "Straight hair" },
   },
   {
-    key: "wings",
-    label: "Wings",
-    dominant: { allele: "W", label: "Winged" },
-    recessive: { allele: "w", label: "Wingless" },
+    key: "freckles",
+    label: "Freckles",
+    dominant: { allele: "F", label: "Freckles" },
+    recessive: { allele: "f", label: "No freckles" },
   },
   {
-    key: "size",
-    label: "Size",
-    dominant: { allele: "T", label: "Towering" },
-    recessive: { allele: "t", label: "Tiny" },
+    key: "tall",
+    label: "Height",
+    dominant: { allele: "T", label: "Tall" },
+    recessive: { allele: "t", label: "Short" },
   },
 ];
 

@@ -154,17 +154,33 @@ function RobotLab() {
     [0, 0, 0] as [number, number, number],
   );
 
-  function ask(e: React.FormEvent) {
+  async function ask(e: React.FormEvent) {
     e.preventDefault();
     const text = question.trim();
-    if (!text) return;
-    const lower = text.toLowerCase();
-    const hit = facts.find((f) => f.keys.some((k) => lower.includes(k)));
-    const answer =
-      hit?.fact ?? fallbackFacts[Math.floor(Math.random() * fallbackFacts.length)]!;
-    setLog((l) => [...l, { role: "you", text }, { role: "ada", text: answer }]);
+    if (!text || thinking) return;
+    const history = log
+      .slice(1)
+      .map((m) => ({ role: m.role === "ada" ? ("assistant" as const) : ("user" as const), content: m.text }))
+      .slice(-10);
+    setLog((l) => [...l, { role: "you", text }]);
     setQuestion("");
+    setThinking(true);
+    try {
+      const res = await askAdaFn({ data: { question: text, history } });
+      setLog((l) => [...l, { role: "ada", text: res.answer }]);
+    } catch (err) {
+      setLog((l) => [
+        ...l,
+        {
+          role: "ada",
+          text: err instanceof Error ? err.message : "ADA hit a transmission error. Try again.",
+        },
+      ]);
+    } finally {
+      setThinking(false);
+    }
   }
+
 
   const statLabels = ["Speed", "Strength", "Smarts"];
 

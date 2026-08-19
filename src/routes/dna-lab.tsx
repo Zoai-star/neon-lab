@@ -298,10 +298,10 @@ function DnaLab() {
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 h-56 overflow-hidden">
           <div
             key={crawler.key}
-            className="crawl-across absolute bottom-2 left-0 w-40"
+            className="walk-across absolute bottom-2 left-0 w-40"
             onAnimationEnd={() => setCrawler(null)}
           >
-            <div className="creature-scuttle">
+            <div className="robot-bob">
               <PersonPreview
                 eyes={crawler.specimen.pheno.eyes}
                 hair={crawler.specimen.pheno.hair}
@@ -342,7 +342,7 @@ function DnaLab() {
                     onClick={() => setCrawler({ specimen: s, key: Date.now() })}
                     className="rounded-md border border-border px-2.5 py-1 text-xs uppercase tracking-widest text-muted-foreground transition-colors hover:border-accent hover:text-accent"
                   >
-                    Crawl
+                    Walk
                   </button>
                   <button
                     type="button"
